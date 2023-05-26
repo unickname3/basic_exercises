@@ -33,38 +33,70 @@ messages = [
 import random
 import uuid
 import datetime
+from collections import Counter
+from pprint import pprint
 
 import lorem
 
 
 def generate_chat_history():
     messages_amount = random.randint(200, 1000)
-    users_ids = list(
-        {random.randint(1, 10000) for _ in range(random.randint(5, 20))}
-    )
+    users_ids = list({random.randint(1, 10000) for _ in range(random.randint(5, 20))})
     sent_at = datetime.datetime.now() - datetime.timedelta(days=100)
     messages = []
     for _ in range(messages_amount):
         sent_at += datetime.timedelta(minutes=random.randint(0, 240))
-        messages.append({
-            "id": uuid.uuid4(),
-            "sent_at": sent_at,
-            "sent_by": random.choice(users_ids),
-            "reply_for": random.choice(
-                [
-                    None,
-                    (
-                        random.choice([m["id"] for m in messages])
-                        if messages else None
-                    ),
-                ],
-            ),
-            "seen_by": random.sample(users_ids,
-                                     random.randint(1, len(users_ids))),
-            "text": lorem.sentence(),
-        })
+        messages.append(
+            {
+                "id": uuid.uuid4(),
+                "sent_at": sent_at,
+                "sent_by": random.choice(users_ids),
+                "reply_for": random.choice(
+                    [
+                        None,
+                        (
+                            random.choice([m["id"] for m in messages])
+                            if messages
+                            else None
+                        ),
+                    ],
+                ),
+                "seen_by": random.sample(users_ids, random.randint(1, len(users_ids))),
+                "text": lorem.sentence(),
+            }
+        )
     return messages
 
 
+def user_with_maximum_messages(messages):
+    """Выводит айди пользователя, который написал больше всех сообщений."""
+    stat = Counter([message["sent_by"] for message in messages])
+    return stat.most_common(1)[0][0]
+
+
+def user_with_maximum_answers(messages):
+    """Выводит айди пользователя, на сообщения которого больше всего отвечали."""
+    pass
+
+
+def user_with_maximum_seen(messages):
+    """Выводит айди пользователей, сообщения которых видело больше всего уникальных пользователей."""
+    pass
+
+
+def popular_time_to_send(messages):
+    """Определяет, когда в чате больше всего сообщений: утром (до 12 часов), днём (12-18 часов) или вечером (после 18 часов)."""
+    pass
+
+
+def longest_conversation(messages):
+    """Выводит идентификаторы сообщений, который стали началом для самых длинных тредов (цепочек ответов)."""
+    pass
+
+
 if __name__ == "__main__":
-    print(generate_chat_history())
+    history = generate_chat_history()
+    pprint(history)
+    print(
+        f"Больше всех сообщений написал пользователь с id: {user_with_maximum_messages(history)}"
+    )
