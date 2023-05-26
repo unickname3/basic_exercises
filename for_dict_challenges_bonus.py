@@ -81,7 +81,27 @@ def user_with_maximum_answers(messages):
 
 def user_with_maximum_seen(messages):
     """Выводит айди пользователей, сообщения которых видело больше всего уникальных пользователей."""
-    pass
+    users_message_seen = dict()
+    for message in messages:
+        user = message["sent_by"]
+        users_message_seen.setdefault(user, set())
+        users_message_seen[user] = users_message_seen[user].union(
+            set(message["seen_by"])
+        )
+
+    users_message_seen_stat = {
+        user: len(users_message_seen[user]) for user in users_message_seen.keys()
+    }
+
+    maximum_views = max(users_message_seen_stat.values())
+
+    return ", ".join(
+        [
+            str(user)
+            for user in users_message_seen_stat.keys()
+            if users_message_seen_stat[user] == maximum_views
+        ]
+    )
 
 
 def popular_time_to_send(messages):
@@ -99,4 +119,7 @@ if __name__ == "__main__":
     pprint(history)
     print(
         f"Больше всех сообщений написал пользователь с id: {user_with_maximum_messages(history)}"
+    )
+    print(
+        f"Больше всего видели сообщения пользователя с id: {user_with_maximum_seen(history)}"
     )
