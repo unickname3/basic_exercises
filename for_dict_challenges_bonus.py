@@ -33,10 +33,12 @@ messages = [
 import random
 import uuid
 import datetime
+import itertools
 from collections import Counter
 from pprint import pprint
 
 import lorem
+import networkx as nx
 
 
 def generate_chat_history():
@@ -122,23 +124,63 @@ def user_with_maximum_seen(messages):
 
 def popular_time_to_send(messages):
     """Определяет, когда в чате больше всего сообщений: утром (до 12 часов), днём (12-18 часов) или вечером (после 18 часов)."""
-    pass
+    time_stat = {
+        "утром": 0,
+        "днём": 0,
+        "вечером": 0,
+    }
+    for message in messages:
+        time = message["sent_at"].time()
+        if time < datetime.time(12, 0, 0):
+            time_stat["утром"] += 1
+        elif time <= datetime.time(18, 0, 0):
+            time_stat["днём"] += 1
+        else:
+            time_stat["вечером"] += 1
+
+    return max(time_stat, key=time_stat.get)
 
 
 def longest_conversation(messages):
     """Выводит идентификаторы сообщений, который стали началом для самых длинных тредов (цепочек ответов)."""
-    pass
+    replys_graph = nx.DiGraph()
+    for message in messages:
+        out_node = message["reply_for"]
+        in_node = message["id"]
+        if in_node and out_node:
+            replys_graph.add_node(out_node)
+            replys_graph.add_node(in_node)
+            replys_graph.add_edge(out_node, in_node)
+
+    all_path = []
+    for x, y in itertools.combinations(replys_graph.nodes, 2):
+        for path in nx.all_simple_paths(replys_graph, x, y):
+            all_path.append(path)
+    all_path.sort(key=len, reverse=True)
+
+    result = []
+    longest_path_len = len(all_path[0])
+    for path in all_path:
+        if len(path) < longest_path_len:
+            break
+        result.append(str(path[0]))
+
+    return ", ".join(result)
 
 
 if __name__ == "__main__":
     history = generate_chat_history()
     pprint(history)
     print(
-        f"Больше всех сообщений написал пользователь с id: {user_with_maximum_messages(history)}"
+        f"1. Больше всех сообщений написал пользователь с id: {user_with_maximum_messages(history)}."
     )
     print(
-        f"Больше всего отвечали на сообщения пользователя с id: {user_with_maximum_answers(history)}"
+        f"2. Больше всего отвечали на сообщения пользователя с id: {user_with_maximum_answers(history)}."
     )
     print(
-        f"Больше всего видели сообщения пользователя с id: {user_with_maximum_seen(history)}"
+        f"3. Больше всего видели сообщения пользователя с id: {user_with_maximum_seen(history)}."
+    )
+    print(f"4. В чате больше всего сообщений {popular_time_to_send(history)}.")
+    print(
+        f"5. Самые длинные треды начинаются с сообщений с идентификаторами: {longest_conversation(history)}."
     )
