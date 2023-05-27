@@ -76,7 +76,23 @@ def user_with_maximum_messages(messages):
 
 def user_with_maximum_answers(messages):
     """Выводит айди пользователя, на сообщения которого больше всего отвечали."""
-    pass
+    number_answers_for_message = dict()
+    messages_by_user = dict()
+    for message in messages:
+        reply_for = message["reply_for"]
+        number_answers_for_message.setdefault(reply_for, 0)
+        number_answers_for_message[reply_for] += 1
+
+        user = message["sent_by"]
+        messages_by_user.setdefault(user, [])
+        messages_by_user[user].append(message["id"])
+
+    replys_for_user = dict()
+    for user, messages_list in messages_by_user.items():
+        replys_for_user.setdefault(user, 0)
+        for message_id in messages_list:
+            replys_for_user[user] += number_answers_for_message.get(message_id, 0)
+    return max(replys_for_user, key=replys_for_user.get)
 
 
 def user_with_maximum_seen(messages):
@@ -119,6 +135,9 @@ if __name__ == "__main__":
     pprint(history)
     print(
         f"Больше всех сообщений написал пользователь с id: {user_with_maximum_messages(history)}"
+    )
+    print(
+        f"Больше всего отвечали на сообщения пользователя с id: {user_with_maximum_answers(history)}"
     )
     print(
         f"Больше всего видели сообщения пользователя с id: {user_with_maximum_seen(history)}"
